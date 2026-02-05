@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "https://real-time-team-manage.netlify.app/",
     credentials: true,
   })
 );
@@ -41,7 +41,7 @@ app.get("/", (req, res) => {
 
 // Socket.IO setup
 const io = new Server(server, {
-  cors: { origin: "http://localhost:5173", methods: ["GET", "POST"] },
+  cors: { origin: "https://real-time-team-manage.netlify.app/", methods: ["GET", "POST"] },
 });
 
 const Chat = require("./Models/Chat");
