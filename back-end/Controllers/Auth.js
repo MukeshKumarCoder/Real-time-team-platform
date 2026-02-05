@@ -34,6 +34,7 @@ exports.signup = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      role: role,
     });
 
     //return res
@@ -90,7 +91,7 @@ exports.login = async (req, res) => {
       user.token = token;
 
       //create cookie and send response
-      const option = {
+      const options = {
         expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
         httpOnly: true,
       };

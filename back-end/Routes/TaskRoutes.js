@@ -10,13 +10,13 @@ const {
 const {
   auth,
   isAdmin,
-  isManager,
-  isMember,
+  isAdminOrManager,
 } = require("../Middleware/AuthMiddleware");
 
 router.get("/", auth, getAllTasks);
-router.post("/create", auth, isAdmin, isManager, createTask);
+router.post("/create", auth, isAdminOrManager, createTask);
 router.put("/update/:id", auth, updateTask);
-router.delete("/delete/:id", auth, isAdmin);
+router.delete("/delete/:id", auth, isAdmin, deleteTask);
 
 module.exports = router;
+

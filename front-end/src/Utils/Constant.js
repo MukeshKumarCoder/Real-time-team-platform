@@ -1,0 +1,5 @@
+export const ACCOUNT_TYPE = {
+  MEMBER: "MEMBER",
+  MANAGER: "MANAGER",
+  ADMIN: "ADMIN",
+};

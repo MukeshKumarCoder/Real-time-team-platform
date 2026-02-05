@@ -13,12 +13,13 @@ const {
   isAdmin,
   isManager,
   isMember,
+  isAdminOrManager,
 } = require("../Middleware/AuthMiddleware");
 
-router.post("/create", auth, isAdmin, isManager, createProject);
-router.put("/update/:id", auth, isAdmin, isManager, updateProject);
-router.get("/", auth, isAdmin, isManager, isMember, getProject);
-router.get("/single/:id", auth, isAdmin, isManager, isMember, getSingleProject);
+router.get("/", auth, getProject);
+router.post("/create", auth, isAdminOrManager, createProject);
+router.put("/update/:id", auth, isAdminOrManager, updateProject);
+router.get("/single/:id", auth, getSingleProject);
 router.delete("/delete/:id", auth, isAdmin, deleteProject);
 
 module.exports = router;
