@@ -4,7 +4,9 @@ import io from "socket.io-client";
 import axios from "axios";
 
 // Single socket instance
-const socket = io("http://localhost:4000");
+const socket = io("https://real-time-team-platform.vercel.app/", {
+  withCredentials: true,
+});
 
 const Chat = ({ projectId, teamId }) => {
   const { user } = useSelector((state) => state.auth);
