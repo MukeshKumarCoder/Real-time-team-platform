@@ -33,6 +33,7 @@ exports.createProject = async (req, res) => {
       project,
     });
   } catch (error) {
+    // console.log("error", error)
     return res.status(500).json({
       success: false,
       message: "Failed to create project",
@@ -42,7 +43,7 @@ exports.createProject = async (req, res) => {
 };
 
 // update project
-exports.updateProject = async () => {
+exports.updateProject = async (req, res) => {
   try {
     // data from req body
     const { name, description } = req.body;
@@ -130,7 +131,7 @@ exports.getProject = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: projects,
-      message: "Projects retrieved successfully",
+      message: "Projects received successfully",
     });
   } catch (error) {
     return res.status(500).json({

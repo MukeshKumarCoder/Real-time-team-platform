@@ -1,12 +1,15 @@
 const Task = require("../Models/Task");
 const Project = require("../Models/Project");
-const { createTaskSchema } = require("../Validations/taskValidation");
+const {
+  createTaskSchema,
+  updateTaskSchema,
+} = require("../Validations/taskValidation");
 
 // Create Task
 exports.createTask = async (req, res) => {
   try {
     // Data from req body
-    const { title, description, status, projectId, assignedTo } = req.body;
+    let { title, description, status, projectId, assignedTo } = req.body;
 
     // validate
     const { error } = createTaskSchema.validate({
@@ -164,7 +167,7 @@ exports.deleteTask = async (req, res) => {
 
     // find task and check team access
     const task = await Task.findById(taskId).populate({
-      path: "project",
+      path: "projectId",
       match: { teamId: req.user.teamId },
     });
 
@@ -185,7 +188,7 @@ exports.deleteTask = async (req, res) => {
       message: "Task deleted successfully",
     });
   } catch (error) {
-    console.log(error);
+    console.log("error", error);
     return res.status(500).json({
       success: false,
       message: "Task cannot be deleted. Please try again",
