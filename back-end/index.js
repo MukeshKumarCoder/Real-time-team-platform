@@ -41,7 +41,10 @@ app.get("/", (req, res) => {
 
 // Socket.IO setup
 const io = new Server(server, {
-  cors: { origin: "https://real-time-team-manage.netlify.app/", methods: ["GET", "POST"] },
+  cors: { origin: "https://real-time-team-manage.netlify.app/",
+         methods: ["GET", "POST"],
+         credentials: true
+        },
 });
 
 const Chat = require("./Models/Chat");
