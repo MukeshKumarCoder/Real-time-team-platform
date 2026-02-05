@@ -4,7 +4,7 @@ import io from "socket.io-client";
 import axios from "axios";
 
 // Single socket instance
-const socket = io("https://real-time-team-platform-3jcov8xe3.vercel.app/", {
+const socket = io("http://localhost:4000", {
   withCredentials: true,
 });
 
@@ -23,7 +23,7 @@ const Chat = ({ projectId, teamId }) => {
 
     const fetchMessages = async () => {
       try {
-        let url = `https://real-time-team-platform-3jcov8xe3.vercel.app/api/chat/messages?`;
+        let url = `http://localhost:4000/api/chat/messages?`;
         if (projectId) url += `projectId=${projectId}`;
         else if (teamId) url += `teamId=${teamId}`;
 
@@ -70,7 +70,7 @@ const Chat = ({ projectId, teamId }) => {
     // Save to backend
     try {
       await axios.post(
-        `https://real-time-team-platform-3jcov8xe3.vercel.app/api/chat/messages`,
+        `http://localhost:4000/api/chat/messages`,
         { content: newMessage, projectId, teamId },
         { withCredentials: true },
       );

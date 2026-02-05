@@ -18,12 +18,17 @@ const chatRouter = require("./Routes/ChatRoute"); // new chat route
 // Database connect
 database.connect();
 
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+
 app.use(
   cors({
-    origin: "https://http://localhost:5173/",
+    origin: [
+      "http://localhost:5173"
+    ],
     credentials: true,
   }),
 );
@@ -42,14 +47,18 @@ app.get("/", (req, res) => {
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: "https://http://localhost:5173/",
+    origin: [
+      "http://localhost:5173"
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
+// Chat model
 const Chat = require("./Models/Chat");
 
+// Socket.IO connection
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
