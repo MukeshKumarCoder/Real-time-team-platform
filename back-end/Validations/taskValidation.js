@@ -8,11 +8,5 @@ export const createTaskSchema = Joi.object({
 });
 
 export const updateTaskSchema = Joi.object({
-  title: Joi.string().min(3),
-  description: Joi.string().allow(""),
-  status: Joi.string().valid("todo", "in-progress", "done"),
-  assignedTo: Joi.string().allow(null),
+  status: Joi.string().valid("todo", "in-progress", "done").required(),
 });
-
-
-

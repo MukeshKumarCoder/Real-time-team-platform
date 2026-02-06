@@ -1,5 +1,6 @@
 const Task = require("../Models/Task");
 const Project = require("../Models/Project");
+const User = require("../Models/User");
 const {
   createTaskSchema,
   updateTaskSchema,
@@ -10,6 +11,7 @@ exports.createTask = async (req, res) => {
   try {
     // Data from req body
     let { title, description, status, projectId, assignedTo } = req.body;
+    const createdBy = req.user.id;
 
     // validate
     const { error } = createTaskSchema.validate({
@@ -34,6 +36,7 @@ exports.createTask = async (req, res) => {
       description,
       projectId,
       assignedTo,
+      createdBy,
       status,
     });
 
@@ -56,12 +59,13 @@ exports.createTask = async (req, res) => {
 exports.updateTask = async (req, res) => {
   try {
     // data from req body
-    const updateData = req.body;
+    const { status } = req.body;
+    const createdBy = req.user.id
 
     // validate
-    const { error } = updateTaskSchema.validate(updateData);
+    const { error } = updateTaskSchema.validate({ status });
     if (error) {
-      return res.status(403).json({
+      return res.status(400).json({
         success: false,
         message: error.details[0].message,
       });
@@ -81,19 +85,9 @@ exports.updateTask = async (req, res) => {
       });
     }
 
-    // MEMBER restriction
-    if (
-      req.user.role === "MEMBER" &&
-      (updateData.assignedTo || updateData.title)
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "Members can only update task status",
-      });
-    }
-
     // update task
-    Object.assign(task, updateData);
+    task.status = status;
+    task.createdBy = createdBy
     await task.save();
 
     // return res
@@ -107,6 +101,59 @@ exports.updateTask = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Task cannot be updated. Please try again",
+    });
+  }
+};
+
+// Assign the task to a member
+exports.assignTask = async (req, res) => {
+  try {
+    // get data from req body
+    const { userId } = req.body;
+
+    // validate user id
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    // check user exists or not
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // assign task to user
+    const task = await Task.findByIdAndUpdate(
+      req.params.id,
+      { assignedTo: userId },
+      { new: true },
+    ).populate("assignedTo", "name email");
+
+    // check task exists or not
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
+
+    // return response
+    return res.status(200).json({
+      success: true,
+      message: "Task assigned successfully",
+      task,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Task cannot be assigned. Please try again",
     });
   }
 };
