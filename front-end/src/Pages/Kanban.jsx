@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
-import { fetchTasks, updateTask } from "../redux/taskSlice";
+import { fetchTasks, updateTask } from "../Services/Operations/taskActions";
 import TaskCard from "../Components/TaskCard";
 import CreateTaskModal from "../Components/CreateTaskModal";
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 const Kanban = () => {
-  const { id: projectId } = useParams();
+  const { projectId } = useParams();
   const dispatch = useDispatch();
   const { list: tasks, loading } = useSelector((state) => state.task);
   const [open, setOpen] = useState(false);
@@ -26,7 +26,7 @@ const Kanban = () => {
   const handleDragEnd = (result) => {
     const { destination, source, draggableId } = result;
 
-    if (!destination) return; // dropped outside
+    if (!destination) return;
     if (
       destination.droppableId === source.droppableId &&
       destination.index === source.index
@@ -35,10 +35,7 @@ const Kanban = () => {
 
     const newStatus = destination.droppableId;
 
-    // update task status
-    dispatch(
-      updateTask({ id: draggableId, updateData: { status: newStatus } }),
-    );
+    dispatch(updateTask(draggableId, { status: newStatus }));
   };
 
   return (
@@ -54,7 +51,7 @@ const Kanban = () => {
       </div>
 
       {loading ? (
-        <p className="text-center text-gray-500 mt-6">Loading...</p>
+        <div className="spinner"></div>
       ) : (
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -66,7 +63,7 @@ const Kanban = () => {
                     {...provided.droppableProps}
                     className="bg-gray-100 p-4  rounded-lg shadow-sm min-h-75"
                   >
-                    <h3 className="font-semibold text-lg mb-2 text-gray-700">
+                    <h3 className="font-semibold text-lg mb-2 text-gray-700 ">
                       {col.label}
                     </h3>
 

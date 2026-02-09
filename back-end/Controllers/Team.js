@@ -4,20 +4,19 @@ const User = require("../Models/User");
 // create a Team
 exports.createTeam = async (req, res) => {
   try {
-    // Get data from req.body
-    const { name, description } = req.body;
+    const { name, description, projectId } = req.body;
 
-    // validation
-    if (!name) {
-      return res.status(403).status({
+    if (!name || !projectId) {
+      return res.status(400).json({
         success: false,
-        message: "Name is required",
+        message: "Name and ProjectId are required",
       });
     }
 
     const team = await Team.create({
       name,
       description,
+      project: projectId,
       adminId: req.user.id,
       members: [req.user.id],
     });
@@ -27,18 +26,45 @@ exports.createTeam = async (req, res) => {
       role: "ADMIN",
     });
 
-    // return response
     return res.status(200).json({
       success: true,
       message: "Team created Successfully",
       team,
     });
   } catch (error) {
-    console.log("error", error);
     return res.status(500).json({
       success: false,
       message: "Unable to create a Team",
-      error: error.message,
+    });
+  }
+};
+
+// Get all teams of a project
+exports.getAllTeamsOfProject = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+
+    if (!projectId) {
+      return res.status(400).json({
+        success: false,
+        message: "Project ID is required",
+      });
+    }
+
+    const teams = await Team.find({ project: projectId })
+      .populate("adminId", "name email")
+      .populate("members", "name email");
+
+    return res.status(200).json({
+      success: true,
+      message: "Teams fetched successfully",
+      teams, // <-- IMPORTANT (array)
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch teams",
     });
   }
 };
@@ -46,9 +72,13 @@ exports.createTeam = async (req, res) => {
 // Get Team Details
 exports.getTeamDetails = async (req, res) => {
   try {
-    const teamId = req.params.id;
+    // const teamId = req.params.id;
+    const teamId = req.params.teamId;
 
-    const team = await Team.findById(teamId).populate("adminId", "name email");
+    const team = await Team.findById(teamId)
+      .populate("adminId", "name email")
+      .populate("members", "name email")
+      .populate("project", "name");
 
     if (!team) {
       return res.status(404).json({
@@ -228,30 +258,3 @@ exports.removeMember = async (req, res) => {
   }
 };
 
-// Get all users (for adding to team)
-exports.getTeamUsers = async (req, res) => {
-  try {
-    const { teamId } = req.user;
-
-    // validate team id
-    if (!teamId) {
-      return res.status(400).json({
-        success: false,
-        message: "Team ID is required",
-      });
-    }
-
-    // find users of the team
-    const users = await User.find({ teamId }).select("-password");
-
-    // return response
-    return res.status(200).json({
-      success: true,
-      message: "Team users fetched successfully",
-      users,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Failed to fetch users" });
-  }
-};

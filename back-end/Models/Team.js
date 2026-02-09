@@ -10,6 +10,11 @@ const teamSchema = new mongoose.Schema(
     description: {
       type: String,
     },
+    project: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Project",
+      required: true,
+    },
     adminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

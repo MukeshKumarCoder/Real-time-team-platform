@@ -10,6 +10,7 @@ import ProjectDetails from "./Pages/ProjectDetails";
 import Kanban from "./Pages/Kanban";
 import Chat from "./Pages/Chat";
 import Team from "./Pages/Team";
+import TeamDetails from "./Pages/TeamDetails";
 
 const App = () => {
   return (
@@ -28,15 +29,15 @@ const App = () => {
             </ProtectedRoute>
           }
         >
-          {/* Projects list */}
           <Route index element={<Projects />} />
-      
 
-          {/* Project details + nested tabs */}
-          <Route path="projects/:id" element={<ProjectDetails />}>
+          <Route path="projects/:projectId" element={<ProjectDetails />}>
+            <Route index element={<Kanban />} />
             <Route path="kanban" element={<Kanban />} />
             <Route path="chat" element={<Chat />} />
+
             <Route path="team" element={<Team />} />
+            <Route path="team/:teamId" element={<TeamDetails />} />
           </Route>
         </Route>
       </Routes>

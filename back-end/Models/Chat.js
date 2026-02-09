@@ -10,6 +10,10 @@ const chatSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  receiverId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   projectId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Project",

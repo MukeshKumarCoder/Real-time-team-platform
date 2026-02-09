@@ -7,7 +7,7 @@ const Dashboard = () => {
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 p-6 bg-gray-100">
-        <Outlet /> {/* Nested routes render here */}
+        <Outlet /> 
       </main>
     </div>
   );

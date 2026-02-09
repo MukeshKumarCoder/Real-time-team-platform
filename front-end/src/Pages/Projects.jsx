@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProjects } from "../redux/projectSlice";
 import ProjectCard from "../Components/ProjectCard";
 import CreateProjectModal from "../Components/CreateProjectModal";
+import { fetchProjects } from "../Services/Operations/projectActions";
 
 const Projects = () => {
   const dispatch = useDispatch();
@@ -10,9 +10,14 @@ const Projects = () => {
   const { user } = useSelector((state) => state.auth);
   const [open, setOpen] = useState(false);
 
+
   useEffect(() => {
     dispatch(fetchProjects());
   }, [dispatch]);
+
+  if (loading) {
+    return <div className="spinner"></div>;
+  }
 
   return (
     <div>
@@ -29,11 +34,11 @@ const Projects = () => {
         )}
       </div>
 
-      {loading && <p className="text-center text-gray-500 mt-6">Loading...</p>}
+      {loading && <div className="spinner"></div>}
 
       {!loading && list.length === 0 && (
         <p className="text-center text-gray-500 mt-6">
-          No projects yet. Create one 
+          No projects yet. Create one
         </p>
       )}
 

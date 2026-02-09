@@ -1,27 +1,28 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { createProject, fetchProjects } from "../Services/Operations/projectActions";
+import {
+  createTeam,
+  fetchTeamsOfProject,
+} from "../Services/Operations/teamActions";
 
-const CreateProjectModal = ({ onClose }) => {
+const CreateTeamModal = ({ onClose, projectId }) => {
   const dispatch = useDispatch();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
   const handleSubmit = async () => {
-    if (!name.trim()) return;
-    await dispatch(createProject({ name, description }));
-    await dispatch(fetchProjects());
+    await dispatch(createTeam({ name, description, projectId }));
+    await dispatch(fetchTeamsOfProject(projectId));
     onClose();
   };
-
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold mb-4">Create Project</h2>
+        <h2 className="text-xl font-semibold mb-4">Create Team</h2>
 
         <input
           className="w-full border p-2 mb-3 rounded-md"
-          placeholder="Project name"
+          placeholder="Team name"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -53,4 +54,4 @@ const CreateProjectModal = ({ onClose }) => {
   );
 };
 
-export default CreateProjectModal;
+export default CreateTeamModal;

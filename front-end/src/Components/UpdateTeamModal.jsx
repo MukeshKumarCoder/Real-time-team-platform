@@ -1,23 +1,37 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { createProject, fetchProjects } from "../Services/Operations/projectActions";
+import {
+  fetchTeamDetails,
+  updateTeam,
+} from "../Services/Operations/teamActions";
+import { useParams } from "react-router-dom";
 
-const CreateProjectModal = ({ onClose }) => {
+const UpdateTeamModal = ({ onClose, currentTeam }) => {
   const dispatch = useDispatch();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [name, setName] = useState(currentTeam?.name || "");
+  const [description, setDescription] = useState(
+    currentTeam?.description || "",
+  );
+  const { teamId } = useParams();
+
+  useEffect(() => {
+    if (currentTeam) {
+      setName(currentTeam.name || "");
+      setDescription(currentTeam.description || "");
+    }
+  }, [currentTeam]);
 
   const handleSubmit = async () => {
     if (!name.trim()) return;
-    await dispatch(createProject({ name, description }));
-    await dispatch(fetchProjects());
+    await dispatch(updateTeam(currentTeam._id, { name, description }));
+    await dispatch(fetchTeamDetails(teamId));
     onClose();
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold mb-4">Create Project</h2>
+        <h2 className="text-xl font-semibold mb-4">Update Team</h2>
 
         <input
           className="w-full border p-2 mb-3 rounded-md"
@@ -45,7 +59,7 @@ const CreateProjectModal = ({ onClose }) => {
             onClick={handleSubmit}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 cursor-pointer rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
-            Create
+            Update
           </button>
         </div>
       </div>
@@ -53,4 +67,4 @@ const CreateProjectModal = ({ onClose }) => {
   );
 };
 
-export default CreateProjectModal;
+export default UpdateTeamModal;

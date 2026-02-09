@@ -3,126 +3,157 @@ import { useSelector } from "react-redux";
 import io from "socket.io-client";
 import axios from "axios";
 
-// Single socket instance
-const socket = io("http://localhost:4000", {
-  withCredentials: true,
-});
+// Using a single socket instance
+const socket = io("http://localhost:4000", { withCredentials: true });
 
-const Chat = ({ projectId, teamId }) => {
+const Chat = ({ projectId, teamId, receiverId }) => {
   const { user } = useSelector((state) => state.auth);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () =>
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   useEffect(scrollToBottom, [messages]);
 
   useEffect(() => {
-    if (!projectId && !teamId) return;
+    if (!user?._id) return;
 
+    // 1. Setup & Room Entry
+    socket.emit("setup", user._id);
+
+    if (projectId) socket.emit("joinProject", projectId);
+    else if (teamId) socket.emit("joinTeam", teamId);
+
+    // 2. Fetch Chat History
     const fetchMessages = async () => {
       try {
         let url = `http://localhost:4000/api/chat/messages?`;
         if (projectId) url += `projectId=${projectId}`;
         else if (teamId) url += `teamId=${teamId}`;
+        else if (receiverId)
+          url += `receiverId=${receiverId}&senderId=${user._id}`;
 
         const res = await axios.get(url, { withCredentials: true });
-        setMessages(
-          res.data.messages.map((msg) => ({
-            sender: msg.sender.name,
-            message: msg.content,
-            timestamp: msg.timestamp,
-          })),
-        );
+        if (res.data.success) {
+          setMessages(res.data.messages);
+        }
       } catch (err) {
         console.error("Failed to fetch messages:", err);
       }
     };
-
     fetchMessages();
 
-    if (projectId) socket.emit("joinProject", projectId);
-    if (teamId) socket.emit("joinTeam", teamId);
+    // 3. Real-time Listener (Fixed filtering logic)
+    socket.on("receiveMessage", (receivedData) => {
+      console.log("Socket message received:", receivedData);
 
-    socket.on("receiveMessage", (msg) => setMessages((prev) => [...prev, msg]));
+      // Check if message belongs to the current open chat window
+      const isRelevant =
+        (projectId && receivedData.projectId === projectId) ||
+        (teamId && receivedData.teamId === teamId) ||
+        (receiverId &&
+          (receivedData.sender._id === receiverId ||
+            receivedData.receiverId === user._id));
 
-    return () => socket.off("receiveMessage");
-  }, [projectId, teamId]);
-
-  const sendMessage = async () => {
-    if (!user || !newMessage.trim()) return;
-
-    const msg = {
-      sender: { _id: user._id, name: user.name },
-      message: newMessage,
-      timestamp: new Date(),
-    };
-
-    // Emit to socket
-    socket.emit("sendMessage", {
-      projectId,
-      teamId,
-      message: newMessage,
-      senderId: user._id,
+      if (isRelevant) {
+        setMessages((prev) => [...prev, receivedData]);
+      }
     });
 
-    // Save to backend
-    try {
-      await axios.post(
-        `http://localhost:4000/api/chat/messages`,
-        { content: newMessage, projectId, teamId },
-        { withCredentials: true },
-      );
-    } catch (err) {
-      console.error("Failed to save message:", err);
-    }
+    return () => {
+      socket.off("receiveMessage");
+    };
+  }, [projectId, teamId, receiverId, user?._id]);
 
-    setMessages((prev) => [...prev, msg]);
+  const sendMessage = () => {
+    if (!user || !newMessage.trim()) return;
+
+    const messageData = {
+      projectId,
+      teamId,
+      receiverId,
+      message: newMessage,
+      senderId: user._id,
+    };
+
+    socket.emit("sendMessage", messageData);
     setNewMessage("");
   };
 
-  if (!user) return <p className="p-6 text-gray-500">Loading user...</p>;
+  if (!user) return <div className="p-4 text-center">Connecting...</div>;
 
   return (
-    <div className="flex flex-col h-full border rounded-lg shadow bg-white">
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`flex ${msg.sender?.name === user.name ? "justify-end" : "justify-start"}`}
-          >
+    <div className="flex flex-col h-[500px] border rounded-lg shadow-lg bg-white overflow-hidden">
+      {/* Header */}
+      <div className="p-3 border-b bg-blue-600 text-white flex justify-between items-center">
+        <span className="font-bold">
+          {projectId ? "Project Chat" : teamId ? "Team Chat" : "Direct Message"}
+        </span>
+        <div className="flex items-center text-[10px] bg-blue-500 px-2 py-1 rounded-full">
+          <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-1 animate-pulse"></div>
+          CONNECTED
+        </div>
+      </div>
+
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        {messages.map((msg, idx) => {
+          // Handle both 'content' from DB and 'message' from Socket
+          const text = msg.content || msg.message;
+          const senderObj = msg.sender || {};
+          const isMe = (senderObj._id || senderObj) === user._id;
+
+          return (
             <div
-              className={`max-w-xs px-4 py-2 rounded-lg shadow ${msg.sender?.name === user.name ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"}`}
+              key={idx}
+              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
             >
-              <div className="text-sm font-semibold">{msg.sender?.name}</div>
-              <div className="mt-1">{msg.message}</div>
-              <div className="text-xs text-gray-400 mt-1 text-right">
-                {new Date(msg.timestamp).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+              <div
+                className={`max-w-[75%] px-4 py-2 rounded-2xl shadow-sm ${
+                  isMe
+                    ? "bg-blue-600 text-white rounded-tr-none"
+                    : "bg-white text-gray-800 border rounded-tl-none"
+                }`}
+              >
+                {!isMe && (
+                  <div className="text-[10px] font-black uppercase mb-1 text-blue-500">
+                    {senderObj.name || "User"}
+                  </div>
+                )}
+                <div className="text-sm">{text}</div>
+                <div className={`text-[9px] mt-1 opacity-60 text-right`}>
+                  {new Date(msg.timestamp).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
-      <div className="p-3 border-t flex space-x-2 bg-gray-50">
+
+      {/* Input Area */}
+      <div className="p-3 bg-white border-t flex gap-2">
         <input
           type="text"
-          placeholder="Type a message..."
-          className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Write a message..."
+          className="flex-1 border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:border-blue-500 transition-all"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         />
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white p-2 rounded-full w-10 h-10 flex items-center justify-center hover:bg-blue-700 active:scale-95 transition-all shadow-md"
           onClick={sendMessage}
         >
-          Send
+          <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+          </svg>
         </button>
       </div>
     </div>

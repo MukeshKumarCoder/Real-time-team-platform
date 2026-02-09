@@ -1,23 +1,30 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { createProject, fetchProjects } from "../Services/Operations/projectActions";
+import { updateProject } from "../Services/Operations/projectActions";
 
-const CreateProjectModal = ({ onClose }) => {
+const UpdateProjectModal = ({ onClose, currentProject }) => {
   const dispatch = useDispatch();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [name, setName] = useState(currentProject?.name || "");
+  const [description, setDescription] = useState(currentProject?.description || "");
+
+  useEffect(() => {
+    if (currentProject) {
+      setName(currentProject.name || "");
+      setDescription(currentProject.description || "");
+    }
+  }, [currentProject]);
 
   const handleSubmit = async () => {
     if (!name.trim()) return;
-    await dispatch(createProject({ name, description }));
-    await dispatch(fetchProjects());
+    await dispatch(updateProject(currentProject._id, { name, description }));
+
     onClose();
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold mb-4">Create Project</h2>
+        <h2 className="text-xl font-semibold mb-4">Update Project</h2>
 
         <input
           className="w-full border p-2 mb-3 rounded-md"
@@ -45,7 +52,7 @@ const CreateProjectModal = ({ onClose }) => {
             onClick={handleSubmit}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 cursor-pointer rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
-            Create
+            Update
           </button>
         </div>
       </div>
@@ -53,4 +60,4 @@ const CreateProjectModal = ({ onClose }) => {
   );
 };
 
-export default CreateProjectModal;
+export default UpdateProjectModal;

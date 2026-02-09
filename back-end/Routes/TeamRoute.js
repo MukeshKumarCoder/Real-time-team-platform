@@ -12,11 +12,15 @@ const {
   addMember,
   removeMember,
   getTeamUsers,
+  getAllTeamsOfProject,
 } = require("../Controllers/Team");
+
 
 router.post("/create", auth, isAdmin, createTeam);
 
-router.get("/:id", auth, getTeamDetails);
+router.get("/project/:projectId", auth, getAllTeamsOfProject);
+
+router.get("/:teamId", auth, getTeamDetails);
 
 router.put("/:id", auth, isAdmin, updateTeam);
 
@@ -24,11 +28,6 @@ router.delete("/:id", auth, isAdmin, deleteTeam);
 
 router.post("/:id/members", auth, isAdminOrManager, addMember);
 
-
 router.delete("/:id/members/:memberId", auth, isAdminOrManager, removeMember);
 
-router.get("/users/all", auth, getTeamUsers);
-
 module.exports = router;
-
-

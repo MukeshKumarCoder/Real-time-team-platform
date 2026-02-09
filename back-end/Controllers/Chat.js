@@ -1,11 +1,22 @@
 const Chat = require("../Models/Chat");
 
 exports.getMessages = async (req, res) => {
-  const { projectId, teamId } = req.query;
+  const { projectId, teamId, receiverId, senderId } = req.query;
   try {
-    const filter = {};
-    if (projectId) filter.projectId = projectId;
-    if (teamId) filter.teamId = teamId;
+    let filter = {};
+
+    if (projectId) {
+      filter.projectId = projectId;
+    } else if (teamId) {
+      filter.teamId = teamId;
+    } else if (receiverId && senderId) {
+      filter = {
+        $or: [
+          { sender: senderId, receiverId: receiverId },
+          { sender: receiverId, receiverId: senderId },
+        ],
+      };
+    }
 
     const messages = await Chat.find(filter)
       .populate("sender", "name email role")
@@ -19,18 +30,18 @@ exports.getMessages = async (req, res) => {
   }
 };
 
-exports.sendMessage = async (req, res) => {
-  const { content, projectId, teamId } = req.body;
-  try {
-    const message = await Chat.create({
-      content,
-      sender: req.user._id,
-      projectId,
-      teamId,
-    });
-    const populated = await message.populate("sender", "name email role");
-    res.status(201).json({ success: true, message: populated });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Failed to send message" });
-  }
-};
+// exports.sendMessage = async (req, res) => {
+//   const { content, projectId, teamId } = req.body;
+//   try {
+//     const message = await Chat.create({
+//       content,
+//       sender: req.user._id,
+//       projectId,
+//       teamId,
+//     });
+//     const populated = await message.populate("sender", "name email role");
+//     res.status(201).json({ success: true, message: populated });
+//   } catch (err) {
+//     res.status(500).json({ success: false, message: "Failed to send message" });
+//   }
+// };

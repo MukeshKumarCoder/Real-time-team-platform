@@ -60,7 +60,7 @@ exports.updateTask = async (req, res) => {
   try {
     // data from req body
     const { status } = req.body;
-    const createdBy = req.user.id
+    
 
     // validate
     const { error } = updateTaskSchema.validate({ status });
@@ -87,7 +87,6 @@ exports.updateTask = async (req, res) => {
 
     // update task
     task.status = status;
-    task.createdBy = createdBy
     await task.save();
 
     // return res
